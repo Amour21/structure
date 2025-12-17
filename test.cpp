@@ -8,7 +8,7 @@ protected:
     }
 };
 
-// -------------------- Arithmetic --------------------
+// Arithmetic 
 TEST_F(CalcTest, Arithmetic_Add) {
     EXPECT_DOUBLE_EQ(computeExpression("2+2"), 4);
 }
@@ -320,3 +320,4 @@ TEST_F(CalcTest, Precedence_Check2) {
 TEST_F(CalcTest, Errors_EmptyInput) {
     EXPECT_THROW(computeExpression(""), std::runtime_error);
 }
+
