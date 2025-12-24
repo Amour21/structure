@@ -1,36 +1,7 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <sstream>
-#include <functional>
-#include <cmath>
-#include <stdexcept>
-#include <iomanip>
-#include <cctype>
-#include "Vector.cpp"
-#include "stack.h"
-#include "queue.h"
 #include "avtomat.h"
+
 using namespace std;
 
-
-enum class TokenType { Number, Op, LParen, RParen };// типы токенов
-enum class Assoc { Left, Right }; // ассоциативность операторов
-
-struct OperatorInfo {
-    string sym;
-    int precedence;
-    Assoc assoc;
-    int arity; // 1 or 2
-    function<double(double, double)> func;
-};
-
-struct Token {
-    TokenType type;
-    string text;
-    Token(TokenType t = TokenType::Op, string s = "") : type(t), text(move(s)) {}
-};
 
 
 unordered_map<string, OperatorInfo> operators;
