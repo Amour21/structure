@@ -3,9 +3,11 @@
 #include <sstream>
 #include <string>
 #include <cstdint>
+#include <vector>
 #include <cmath>
 #include <stdexcept>
 #include "list.h"
+#include <algorithm>
 
 struct Monom {
     double coeff;
@@ -153,31 +155,53 @@ public:
         return a + (b * -1.0);
     }
 
-    friend Polynomial operator*(const Polynomial& a, const Polynomial& b) {
-        Polynomial res;
+    friend Polynomial operator*(const Polynomial& a, const Polynomial& b)
+    {
+        if (a.data.empty() || b.data.empty())
+            return Polynomial();
 
-        for (auto& m1 : a.data) {
-            for (auto& m2 : b.data) {
+        std::vector<Monom> tmp;
+        tmp.reserve(a.data.size() * b.data.size());
 
-                uint32_t i1, j1, k1;
-                uint32_t i2, j2, k2;
+        for (const auto& ma : a.data)
+            for (const auto& mb : b.data)
+            {
+                uint32_t i1, j1, k1, i2, j2, k2;
+                Monom::unpack(ma.deg, i1, j1, k1);
+                Monom::unpack(mb.deg, i2, j2, k2);
 
-                Monom::unpack(m1.deg, i1, j1, k1);
-                Monom::unpack(m2.deg, i2, j2, k2);
+                uint32_t ni = i1 + i2, nj = j1 + j2, nk = k1 + k2;
 
-                uint32_t ni = i1 + i2;
-                uint32_t nj = j1 + j2;
-                uint32_t nk = k1 + k2;
+                if (ni >= 1024 || nj >= 1024 || nk >= 1024)
+                    throw std::out_of_range("degree overflow");
 
-                Monom r(
-                    m1.coeff * m2.coeff,
-                    Monom::pack(ni, nj, nk)
-                );
-
-                res.add_sorted(r);
+                tmp.emplace_back(ma.coeff * mb.coeff,
+                    Monom::pack(ni, nj, nk));
             }
+
+        std::sort(tmp.begin(), tmp.end(),
+            [](const Monom& A, const Monom& B) {
+                return A.deg < B.deg;
+            });
+
+        Polynomial R;
+
+        for (size_t i = 0; i < tmp.size();)
+        {
+            uint32_t deg = tmp[i].deg;
+            double c = 0;
+
+            size_t j = i;
+            while (j < tmp.size() && tmp[j].deg == deg)
+                c += tmp[j++].coeff;
+
+            if (std::fabs(c) > 1e-12)
+                R.add_back(Monom(c, deg));
+
+            i = j;
         }
-        return res;
+
+        return R;
     }
 
     friend Polynomial operator*(const Polynomial& p, double c) {
